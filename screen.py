@@ -1,5 +1,5 @@
 import pygame
-from consts import SCREEN_SIZE, SCREEN_CAPTION, FPS_MAX, GAME_CHUNK_SIZE, WHITE, BLACK
+from consts import SCREEN_SIZE, SCREEN_CAPTION, FPS_MAX, GAME_CHUNK_SIZE, WHITE, BLACK, X_CHUNK_SIZE, Y_CHUNK_SIZE
 
 
 class Screen:
@@ -15,8 +15,8 @@ class Screen:
 
         self.show_lattice = False
 
-        self.x_chunk_multiplier = int(SCREEN_SIZE[0] / GAME_CHUNK_SIZE)
-        self.y_chunk_multiplier = int(SCREEN_SIZE[1] / GAME_CHUNK_SIZE)
+        self.x_chunk_multiplier = X_CHUNK_SIZE
+        self.y_chunk_multiplier = Y_CHUNK_SIZE
 
         self.__main_screen_update()
 

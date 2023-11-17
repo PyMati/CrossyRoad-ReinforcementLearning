@@ -1,5 +1,6 @@
 import pygame
 from screen import Screen
+from gameboard import Gameboard
 
 
 def main():
@@ -15,6 +16,8 @@ def main():
             keys = pygame.key.get_pressed()
             if keys[pygame.K_w]:
                 game_screen.change_lattice_visibility()
+
+        print(Gameboard().get_env_state())
         game_screen.run_screen()
 
 
