@@ -5,7 +5,11 @@ from screen import Screen
 def main():
     pygame.init()
     game_screen = Screen()
-    while True:
+    running = True
+    while running:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
         game_screen.run_screen()
 
 

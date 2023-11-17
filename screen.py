@@ -1,12 +1,13 @@
 import pygame
-from consts import SCREEN_SIZE, SCREEN_CAPTION, FPS_MAX, BLACK, GAME_CHUNK_SIZE
-import numpy
+from consts import SCREEN_SIZE, SCREEN_CAPTION, FPS_MAX, GAME_CHUNK_SIZE, WHITE, BLACK
 
 
 class Screen:
     def __init__(self):
         self.display = pygame.display
         self.display.set_caption(SCREEN_CAPTION)
+        self.screen = self.display.set_mode(SCREEN_SIZE)
+
         self.screen_rect = None
         self.drawable_elements = []
 
@@ -15,20 +16,16 @@ class Screen:
         self.x_chunk_multiplier = int(SCREEN_SIZE[0] / GAME_CHUNK_SIZE)
         self.y_chunk_multiplier = int(SCREEN_SIZE[1] / GAME_CHUNK_SIZE)
 
-        self.gameState = numpy.ones(
-            (self.x_chunk_multiplier, self.y_chunk_multiplier))
-
-        print(self.gameState)
-
         self.__main_screen_update()
 
     def __main_screen_update(self):
-        self.screen = self.display.set_mode(SCREEN_SIZE)
         self.screen_rect = self.screen.get_rect()
-        self.__update_elements()
-        self.clock.tick(FPS_MAX)
         self.screen.fill(BLACK)
+
+        self.draw_divided_screen()
+        self.__update_elements()
         self.display.flip()
+        self.clock.tick(FPS_MAX)
 
     def __update_elements(self):
         if len(self.drawable_elements) == 0:
@@ -39,7 +36,15 @@ class Screen:
             self.screen.blit(element_to_draw, pos)
 
     def draw_divided_screen(self):
-        return
+        start_x = 0
+        for _ in range(self.x_chunk_multiplier):
+            start_y = 0
+            for _ in range(self.y_chunk_multiplier):
+                chunk = pygame.Rect(
+                    start_x, start_y, GAME_CHUNK_SIZE, GAME_CHUNK_SIZE)
+                pygame.draw.rect(self.screen, WHITE, chunk, 1)
+                start_y += GAME_CHUNK_SIZE
+            start_x += GAME_CHUNK_SIZE
 
     def run_screen(self):
         self.__main_screen_update()
