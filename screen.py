@@ -13,6 +13,8 @@ class Screen:
 
         self.clock = pygame.time.Clock()
 
+        self.show_lattice = False
+
         self.x_chunk_multiplier = int(SCREEN_SIZE[0] / GAME_CHUNK_SIZE)
         self.y_chunk_multiplier = int(SCREEN_SIZE[1] / GAME_CHUNK_SIZE)
 
@@ -22,7 +24,8 @@ class Screen:
         self.screen_rect = self.screen.get_rect()
         self.screen.fill(BLACK)
 
-        self.draw_divided_screen()
+        if self.show_lattice:
+            self.draw_divided_screen()
         self.__update_elements()
         self.display.flip()
         self.clock.tick(FPS_MAX)
@@ -53,3 +56,9 @@ class Screen:
         if self.screen_rect == None:
             return (0, 0, 0, 0)
         return self.screen_rect
+
+    def change_lattice_visibility(self):
+        if not self.show_lattice:
+            self.show_lattice = True
+        else:
+            self.show_lattice = False
