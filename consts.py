@@ -15,6 +15,7 @@ GAME_CHUNK_SIZE = 40
 X_CHUNK_SIZE = int(SCREEN_SIZE[0] / GAME_CHUNK_SIZE)
 Y_CHUNK_SIZE = int(SCREEN_SIZE[1] / GAME_CHUNK_SIZE)
 OBSTACLE_CHANCE = 0.5
+CAR_CHANCE = 0.2
 
 # Images loading
 SIZE = (GAME_CHUNK_SIZE, GAME_CHUNK_SIZE)
@@ -39,3 +40,8 @@ OBSTACLE_IMAGE = pygame.transform.scale(
     OBSTACLE_IMAGE, (GAME_CHUNK_SIZE - 10, GAME_CHUNK_SIZE - 10)
 )
 OBSTACLE_NUM = 5
+CAR_IMAGE = pygame.image.load("./FormattedAssets/Car.png")
+CAR_IMAGE = pygame.transform.scale(
+    CAR_IMAGE, (GAME_CHUNK_SIZE - 2.5, GAME_CHUNK_SIZE - 2.5)
+)
+CAR_NUM = 6

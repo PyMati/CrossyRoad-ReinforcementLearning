@@ -2,6 +2,7 @@ from hmac import new
 import pygame
 import numpy as np
 import random
+from car import Car
 from consts import (
     OBSTACLE_NUM,
     X_CHUNK_SIZE,
@@ -10,6 +11,8 @@ from consts import (
     PLAYER_NUM,
     OBSTACLE_CHANCE,
     OBSTACLE_NUM,
+    CAR_NUM,
+    CAR_CHANCE,
 )
 
 
@@ -23,6 +26,11 @@ class Gameboard(pygame.sprite.Sprite):
 
         self.is_win = False
 
+        self.cars_lanes_indexes = []
+        self.active_cars: list[Car] = []
+        self.car_counter = 0
+        self.car_spawn_counter = 0
+
         # Setting player env
         self.env = np.zeros((self.y_chunk_multiplier, self.x_chunk_multiplier))
         # Setting finish line
@@ -35,6 +43,7 @@ class Gameboard(pygame.sprite.Sprite):
             if i % 2 == 1:
                 self.road = np.ones((self.x_chunk_multiplier))
                 self.map_env[i] = self.road
+                self.cars_lanes_indexes.append(i)
             else:
                 self.sidewalk = np.zeros((self.x_chunk_multiplier))
                 if random.random() < OBSTACLE_CHANCE and i != 0:
@@ -69,3 +78,33 @@ class Gameboard(pygame.sprite.Sprite):
         if self.env[self.y_chunk_multiplier - 1][self.end_x_pos] == PLAYER_NUM:
             return True
         return False
+
+    def check_is_lose(self) -> bool:
+        if PLAYER_NUM not in self.env:
+            return True
+        return False
+
+    def init_cars(self):
+        if self.car_spawn_counter > 5:
+            for i in self.cars_lanes_indexes:
+                if CAR_NUM not in self.env[i]:
+                    if random.random() < CAR_CHANCE:
+                        self.active_cars.append(Car(i))
+            self.car_spawn_counter = 0
+        else:
+            self.car_spawn_counter += 1
+
+    def move_cars(self):
+        if self.car_counter > 10:
+            for car in self.active_cars:
+                car.check_state()
+                car.move()
+                oldpos = car.prv_pos
+                newpos = car.pos
+                if self.is_legal(oldpos):
+                    self.env[oldpos[0]][oldpos[1]] = 0
+                if self.is_legal(newpos):
+                    self.env[newpos[0]][newpos[1]] = CAR_NUM
+            self.car_counter = 0
+        else:
+            self.car_counter += 1

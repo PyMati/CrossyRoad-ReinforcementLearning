@@ -18,6 +18,8 @@ def main():
     game_screen.set_map(gamemap)
     game_screen.set_player_dir(player.get_player_dir())
 
+    gameboard.init_cars()
+
     running = True
     while running:
         keys = pygame.key.get_pressed()
@@ -33,12 +35,15 @@ def main():
             if keys[pygame.K_LEFT]:
                 player.go_left()
 
-        if gameboard.check_is_win():
+        if gameboard.check_is_win() or gameboard.check_is_lose():
             running = False
 
         gamestate = gameboard.get_env_state()
         game_screen.set_gamestate(gamestate)
         game_screen.set_player_dir(player.get_player_dir())
+
+        gameboard.init_cars()
+        gameboard.move_cars()
 
         game_screen.run_screen()
 

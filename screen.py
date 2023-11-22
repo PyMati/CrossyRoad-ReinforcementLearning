@@ -19,6 +19,8 @@ from consts import (
     PLAYER_DIR_RIGHT,
     OBSTACLE_IMAGE,
     OBSTACLE_NUM,
+    CAR_IMAGE,
+    CAR_NUM,
 )
 
 
@@ -97,6 +99,8 @@ class Screen:
                 map_val = self.game_state[i][j]
                 if map_val == OBSTACLE_NUM:
                     self.screen.blit(OBSTACLE_IMAGE, pos)
+                if map_val == CAR_NUM:
+                    self.screen.blit(CAR_IMAGE, pos)
                 start_x += GAME_CHUNK_SIZE
             start_y += GAME_CHUNK_SIZE
 
