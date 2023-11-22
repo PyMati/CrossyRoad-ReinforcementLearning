@@ -2,7 +2,6 @@ from hmac import new
 import pygame
 import numpy as np
 import random
-from screen import Screen
 from consts import (
     OBSTACLE_NUM,
     X_CHUNK_SIZE,
