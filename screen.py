@@ -20,7 +20,8 @@ from consts import (
     OBSTACLE_IMAGE,
     OBSTACLE_NUM,
     CAR_IMAGE,
-    CAR_NUM,
+    RIGHT_CAR_NUM,
+    LEFT_CAR_NUM,
 )
 
 
@@ -87,6 +88,7 @@ class Screen:
                         self.screen.blit(
                             pygame.transform.flip(PLAYER_IMAGE, True, False), pos
                         )
+
                 start_x += GAME_CHUNK_SIZE
             start_y += GAME_CHUNK_SIZE
 
@@ -99,7 +101,9 @@ class Screen:
                 map_val = self.game_state[i][j]
                 if map_val == OBSTACLE_NUM:
                     self.screen.blit(OBSTACLE_IMAGE, pos)
-                if map_val == CAR_NUM:
+                if map_val == RIGHT_CAR_NUM:
+                    self.screen.blit(pygame.transform.flip(CAR_IMAGE, True, False), pos)
+                if map_val == LEFT_CAR_NUM:
                     self.screen.blit(CAR_IMAGE, pos)
                 start_x += GAME_CHUNK_SIZE
             start_y += GAME_CHUNK_SIZE

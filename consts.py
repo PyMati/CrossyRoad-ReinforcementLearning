@@ -44,4 +44,5 @@ CAR_IMAGE = pygame.image.load("./FormattedAssets/Car.png")
 CAR_IMAGE = pygame.transform.scale(
     CAR_IMAGE, (GAME_CHUNK_SIZE - 2.5, GAME_CHUNK_SIZE - 2.5)
 )
-CAR_NUM = 6
+LEFT_CAR_NUM = 6
+RIGHT_CAR_NUM = 7

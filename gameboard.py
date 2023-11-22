@@ -11,7 +11,8 @@ from consts import (
     PLAYER_NUM,
     OBSTACLE_CHANCE,
     OBSTACLE_NUM,
-    CAR_NUM,
+    LEFT_CAR_NUM,
+    RIGHT_CAR_NUM,
     CAR_CHANCE,
 )
 
@@ -87,7 +88,7 @@ class Gameboard(pygame.sprite.Sprite):
     def init_cars(self):
         if self.car_spawn_counter > 5:
             for i in self.cars_lanes_indexes:
-                if CAR_NUM not in self.env[i]:
+                if LEFT_CAR_NUM not in self.env[i] and RIGHT_CAR_NUM not in self.env[i]:
                     if random.random() < CAR_CHANCE:
                         self.active_cars.append(Car(i))
             self.car_spawn_counter = 0
@@ -104,7 +105,7 @@ class Gameboard(pygame.sprite.Sprite):
                 if self.is_legal(oldpos):
                     self.env[oldpos[0]][oldpos[1]] = 0
                 if self.is_legal(newpos):
-                    self.env[newpos[0]][newpos[1]] = CAR_NUM
+                    self.env[newpos[0]][newpos[1]] = car.dir
             self.car_counter = 0
         else:
             self.car_counter += 1

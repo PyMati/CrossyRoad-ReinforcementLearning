@@ -2,8 +2,8 @@ import pygame
 import random
 from consts import (
     GAME_CHUNK_SIZE,
-    PLAYER_DIR_LEFT,
-    PLAYER_DIR_RIGHT,
+    LEFT_CAR_NUM,
+    RIGHT_CAR_NUM,
     OBSTACLE_CHANCE,
     X_CHUNK_SIZE,
 )
@@ -16,10 +16,10 @@ class Car(pygame.sprite.Sprite):
         self.prv_pos = [lane, 0]
 
         if random.random() > OBSTACLE_CHANCE:
-            self.dir = PLAYER_DIR_RIGHT
+            self.dir = LEFT_CAR_NUM
             self.pos = [lane, 0]
         else:
-            self.dir = PLAYER_DIR_LEFT
+            self.dir = RIGHT_CAR_NUM
             self.pos = [lane, X_CHUNK_SIZE - 1]
 
     def get_pos(self):
@@ -31,7 +31,7 @@ class Car(pygame.sprite.Sprite):
 
     def move(self):
         self.prv_pos = self.pos
-        if self.dir == PLAYER_DIR_LEFT:
+        if self.dir == RIGHT_CAR_NUM:
             self.pos = [self.pos[0], self.pos[1] - 1]
         else:
             self.pos = [self.pos[0], self.pos[1] + 1]
