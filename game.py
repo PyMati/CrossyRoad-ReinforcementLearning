@@ -33,6 +33,9 @@ def main():
             if keys[pygame.K_a]:
                 player.go_left()
 
+        if gameboard.check_is_win():
+            running = False
+
         gamestate = gameboard.get_env_state()
         game_screen.set_gamestate(gamestate)
         game_screen.set_player_dir(player.get_player_dir())

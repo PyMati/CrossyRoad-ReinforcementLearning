@@ -17,7 +17,8 @@ from consts import (
     FINISH_NUM,
     PLAYER_IMAGE,
     PLAYER_DIR_RIGHT,
-    PLAYER_DIR_LEFT,
+    OBSTACLE_IMAGE,
+    OBSTACLE_NUM,
 )
 
 
@@ -46,6 +47,7 @@ class Screen:
         self.screen.fill(BLACK)
         self.__draw_map()
         self.__draw_players()
+        self.__draw_obstacles()
 
         if self.show_lattice:
             self.draw_divided_screen()
@@ -83,6 +85,18 @@ class Screen:
                         self.screen.blit(
                             pygame.transform.flip(PLAYER_IMAGE, True, False), pos
                         )
+                start_x += GAME_CHUNK_SIZE
+            start_y += GAME_CHUNK_SIZE
+
+    def __draw_obstacles(self):
+        start_y = 0
+        for i in range(self.y_chunk_multiplier):
+            start_x = 0
+            for j in range(self.x_chunk_multiplier):
+                pos = (start_x, start_y)
+                map_val = self.game_state[i][j]
+                if map_val == OBSTACLE_NUM:
+                    self.screen.blit(OBSTACLE_IMAGE, pos)
                 start_x += GAME_CHUNK_SIZE
             start_y += GAME_CHUNK_SIZE
 

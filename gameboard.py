@@ -1,8 +1,17 @@
 from hmac import new
 import pygame
 import numpy as np
+import random
 from screen import Screen
-from consts import X_CHUNK_SIZE, Y_CHUNK_SIZE, FINISH_NUM, PLAYER_NUM
+from consts import (
+    OBSTACLE_NUM,
+    X_CHUNK_SIZE,
+    Y_CHUNK_SIZE,
+    FINISH_NUM,
+    PLAYER_NUM,
+    OBSTACLE_CHANCE,
+    OBSTACLE_NUM,
+)
 
 
 class Gameboard(pygame.sprite.Sprite):
@@ -11,6 +20,17 @@ class Gameboard(pygame.sprite.Sprite):
         self.x_chunk_multiplier = X_CHUNK_SIZE
         self.y_chunk_multiplier = Y_CHUNK_SIZE
 
+        self.end_x_pos = random.randint(0, self.x_chunk_multiplier - 1)
+
+        self.is_win = False
+
+        # Setting player env
+        self.env = np.zeros((self.y_chunk_multiplier, self.x_chunk_multiplier))
+        # Setting finish line
+        self.env[self.y_chunk_multiplier - 1][self.end_x_pos] = FINISH_NUM
+        # Setting player start position
+        self.env[0][0] = PLAYER_NUM
+
         self.map_env = np.zeros((self.y_chunk_multiplier, self.x_chunk_multiplier))
         for i in range(self.y_chunk_multiplier):
             if i % 2 == 1:
@@ -18,15 +38,12 @@ class Gameboard(pygame.sprite.Sprite):
                 self.map_env[i] = self.road
             else:
                 self.sidewalk = np.zeros((self.x_chunk_multiplier))
+                if random.random() < OBSTACLE_CHANCE and i != 0:
+                    obstacle_index = random.randint(0, self.x_chunk_multiplier - 1)
+                    self.env[i][obstacle_index] = OBSTACLE_NUM
                 self.map_env[i] = self.sidewalk
-        self.env = np.zeros((self.y_chunk_multiplier, self.x_chunk_multiplier))
         # Setting finish line
-        self.env[self.y_chunk_multiplier - 1][self.x_chunk_multiplier - 1] = FINISH_NUM
-        self.map_env[self.y_chunk_multiplier - 1][
-            self.x_chunk_multiplier - 1
-        ] = FINISH_NUM
-        # Setting player start position
-        self.env[0][0] = PLAYER_NUM
+        self.map_env[self.y_chunk_multiplier - 1][self.end_x_pos] = FINISH_NUM
 
     def get_env_state(self):
         return self.env
@@ -41,8 +58,15 @@ class Gameboard(pygame.sprite.Sprite):
             return False
         if newx < 0 or newx >= self.x_chunk_multiplier:
             return False
+        if self.env[newy][newx] == OBSTACLE_NUM:
+            return False
         return True
 
     def change_player_pos(self, oldpos: tuple, newpos: tuple):
         self.env[oldpos[0]][oldpos[1]] = 0
         self.env[newpos[0]][newpos[1]] = PLAYER_NUM
+
+    def check_is_win(self) -> bool:
+        if self.env[self.y_chunk_multiplier - 1][self.end_x_pos] == PLAYER_NUM:
+            return True
+        return False

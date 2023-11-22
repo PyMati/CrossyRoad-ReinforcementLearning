@@ -14,6 +14,7 @@ RED = (255, 0, 0)
 GAME_CHUNK_SIZE = 40
 X_CHUNK_SIZE = int(SCREEN_SIZE[0] / GAME_CHUNK_SIZE)
 Y_CHUNK_SIZE = int(SCREEN_SIZE[1] / GAME_CHUNK_SIZE)
+OBSTACLE_CHANCE = 0.5
 
 # Images loading
 SIZE = (GAME_CHUNK_SIZE, GAME_CHUNK_SIZE)
@@ -33,3 +34,8 @@ ROAD_NUM = 1
 FINISH_IMAGE = pygame.image.load("./FormattedAssets/Finish.png")
 FINISH_IMAGE = pygame.transform.scale(FINISH_IMAGE, SIZE)
 FINISH_NUM = 3
+OBSTACLE_IMAGE = pygame.image.load("./FormattedAssets/obstacle.png")
+OBSTACLE_IMAGE = pygame.transform.scale(
+    OBSTACLE_IMAGE, (GAME_CHUNK_SIZE - 10, GAME_CHUNK_SIZE - 10)
+)
+OBSTACLE_NUM = 5
