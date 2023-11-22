@@ -26,11 +26,11 @@ def main():
                 running = False
             if keys[pygame.K_SPACE]:
                 game_screen.change_lattice_visibility()
-            if keys[pygame.K_s]:
+            if keys[pygame.K_DOWN]:
                 player.go_down()
-            if keys[pygame.K_d]:
+            if keys[pygame.K_RIGHT]:
                 player.go_right()
-            if keys[pygame.K_a]:
+            if keys[pygame.K_LEFT]:
                 player.go_left()
 
         if gameboard.check_is_win():
