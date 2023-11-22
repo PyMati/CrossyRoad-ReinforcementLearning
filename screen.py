@@ -1,5 +1,16 @@
 import pygame
-from consts import SCREEN_SIZE, SCREEN_CAPTION, FPS_MAX, GAME_CHUNK_SIZE, WHITE, BLACK, X_CHUNK_SIZE, Y_CHUNK_SIZE
+from consts import (
+    SCREEN_SIZE,
+    SCREEN_CAPTION,
+    FPS_MAX,
+    GAME_CHUNK_SIZE,
+    WHITE,
+    BLACK,
+    X_CHUNK_SIZE,
+    Y_CHUNK_SIZE,
+    ROAD_IMAGE,
+    SIDEWALK_IMAGE,
+)
 
 
 class Screen:
@@ -18,15 +29,18 @@ class Screen:
         self.x_chunk_multiplier = X_CHUNK_SIZE
         self.y_chunk_multiplier = Y_CHUNK_SIZE
 
-        self.__main_screen_update()
+        self.game_state = None
+        self.map_state = None
 
     def __main_screen_update(self):
         self.screen_rect = self.screen.get_rect()
         self.screen.fill(BLACK)
+        self.__draw_map()
+        self.__update_elements()
 
         if self.show_lattice:
             self.draw_divided_screen()
-        self.__update_elements()
+
         self.display.flip()
         self.clock.tick(FPS_MAX)
 
@@ -38,13 +52,24 @@ class Screen:
             pos = element[1]
             self.screen.blit(element_to_draw, pos)
 
+    def __draw_map(self):
+        start_y = 0
+        for i in range(self.y_chunk_multiplier):
+            start_x = 0
+            for j in range(self.x_chunk_multiplier):
+                if self.map_state[i][j] == 0:
+                    self.screen.blit(SIDEWALK_IMAGE, (start_x, start_y))
+                else:
+                    self.screen.blit(ROAD_IMAGE, (start_x, start_y))
+                start_x += GAME_CHUNK_SIZE
+            start_y += GAME_CHUNK_SIZE
+
     def draw_divided_screen(self):
         start_x = 0
         for _ in range(self.x_chunk_multiplier):
             start_y = 0
             for _ in range(self.y_chunk_multiplier):
-                chunk = pygame.Rect(
-                    start_x, start_y, GAME_CHUNK_SIZE, GAME_CHUNK_SIZE)
+                chunk = pygame.Rect(start_x, start_y, GAME_CHUNK_SIZE, GAME_CHUNK_SIZE)
                 pygame.draw.rect(self.screen, WHITE, chunk, 1)
                 start_y += GAME_CHUNK_SIZE
             start_x += GAME_CHUNK_SIZE
@@ -62,3 +87,10 @@ class Screen:
             self.show_lattice = True
         else:
             self.show_lattice = False
+
+    def set_gamestate(self, gamestate):
+        self.game_state = gamestate
+
+    def set_map(self, mapstate):
+        self.map_state = mapstate
+        print(self.map_state)
