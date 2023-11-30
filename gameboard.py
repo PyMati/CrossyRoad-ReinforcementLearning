@@ -27,6 +27,8 @@ class Gameboard(pygame.sprite.Sprite):
 
         self.is_win = False
 
+        self.player_pos = [0, 0]
+
         self.cars_lanes_indexes = []
         self.active_cars: list[Car] = []
         self.car_counter = 0
@@ -39,7 +41,8 @@ class Gameboard(pygame.sprite.Sprite):
         # Setting player start position
         self.env[0][0] = PLAYER_NUM
 
-        self.map_env = np.zeros((self.y_chunk_multiplier, self.x_chunk_multiplier))
+        self.map_env = np.zeros(
+            (self.y_chunk_multiplier, self.x_chunk_multiplier))
         for i in range(self.y_chunk_multiplier):
             if i % 2 == 1:
                 self.road = np.ones((self.x_chunk_multiplier))
@@ -48,13 +51,15 @@ class Gameboard(pygame.sprite.Sprite):
             else:
                 self.sidewalk = np.zeros((self.x_chunk_multiplier))
                 if random.random() < OBSTACLE_CHANCE and i != 0:
-                    obstacle_index = random.randint(0, self.x_chunk_multiplier - 1)
+                    obstacle_index = random.randint(
+                        0, self.x_chunk_multiplier - 1)
                     self.env[i][obstacle_index] = OBSTACLE_NUM
                 self.map_env[i] = self.sidewalk
         # Setting finish line
         self.map_env[self.y_chunk_multiplier - 1][self.end_x_pos] = FINISH_NUM
 
     def get_env_state(self):
+        self.__find_player_pos()
         return self.env
 
     def get_map_state(self):
@@ -85,6 +90,24 @@ class Gameboard(pygame.sprite.Sprite):
             return True
         return False
 
+    def get_possible_actions(self) -> list[str]:
+        possible_actions = []
+        player_y_pos = self.player_pos[0]
+        player_x_pos = self.player_pos[1]
+
+        move_to_right = [player_y_pos, player_x_pos + 1]
+        move_to_left = [player_y_pos, player_x_pos - 1]
+        move_to_down = [player_y_pos + 1, player_x_pos]
+
+        if move_to_right[1] > 0 and move_to_right[1] < self.x_chunk_multiplier:
+            possible_actions.append("r")
+        if move_to_left[1] >= 0 and move_to_left[1] < self.x_chunk_multiplier:
+            possible_actions.append("l")
+        if move_to_down[0] <= self.y_chunk_multiplier:
+            possible_actions.append("d")
+
+        print(possible_actions)
+
     def init_cars(self):
         if self.car_spawn_counter > 5:
             for i in self.cars_lanes_indexes:
@@ -109,3 +132,10 @@ class Gameboard(pygame.sprite.Sprite):
             self.car_counter = 0
         else:
             self.car_counter += 1
+
+    def __find_player_pos(self):
+        for i in range(self.env.shape[0]):
+            for j in range(self.env.shape[1]):
+                if self.env[i][j] == PLAYER_NUM:
+                    self.player_pos[0] = i
+                    self.player_pos[1] = j

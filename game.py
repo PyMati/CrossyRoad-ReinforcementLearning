@@ -44,6 +44,7 @@ def main():
 
         gameboard.init_cars()
         gameboard.move_cars()
+        gameboard.get_possible_actions()
 
         game_screen.run_screen()
 
