@@ -26,20 +26,25 @@ PLAYER_IMAGE = pygame.transform.scale(
 PLAYER_NUM = -1
 PLAYER_DIR_RIGHT = 1
 PLAYER_DIR_LEFT = -1
+
 SIDEWALK_IMAGE = pygame.image.load("./FormattedAssets/Sidewalk.png")
 SIDEWALK_IMAGE = pygame.transform.scale(SIDEWALK_IMAGE, SIZE)
 SIDE_NUM = 0
+
 ROAD_IMAGE = pygame.image.load("./FormattedAssets/Road.png")
 ROAD_IMAGE = pygame.transform.scale(ROAD_IMAGE, SIZE)
 ROAD_NUM = 1
+
 FINISH_IMAGE = pygame.image.load("./FormattedAssets/Finish.png")
 FINISH_IMAGE = pygame.transform.scale(FINISH_IMAGE, SIZE)
 FINISH_NUM = 3
+
 OBSTACLE_IMAGE = pygame.image.load("./FormattedAssets/obstacle.png")
 OBSTACLE_IMAGE = pygame.transform.scale(
     OBSTACLE_IMAGE, (GAME_CHUNK_SIZE - 10, GAME_CHUNK_SIZE - 10)
 )
 OBSTACLE_NUM = 5
+
 CAR_IMAGE = pygame.image.load("./FormattedAssets/Car.png")
 CAR_IMAGE = pygame.transform.scale(
     CAR_IMAGE, (GAME_CHUNK_SIZE - 2.5, GAME_CHUNK_SIZE - 2.5)

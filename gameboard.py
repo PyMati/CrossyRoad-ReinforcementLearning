@@ -43,6 +43,11 @@ class Gameboard(pygame.sprite.Sprite):
 
         self.map_env = np.zeros(
             (self.y_chunk_multiplier, self.x_chunk_multiplier))
+        self.__prepare_map()
+        # Setting finish line
+        self.map_env[self.y_chunk_multiplier - 1][self.end_x_pos] = FINISH_NUM
+
+    def __prepare_map(self):
         for i in range(self.y_chunk_multiplier):
             if i % 2 == 1:
                 self.road = np.ones((self.x_chunk_multiplier))
@@ -55,8 +60,6 @@ class Gameboard(pygame.sprite.Sprite):
                         0, self.x_chunk_multiplier - 1)
                     self.env[i][obstacle_index] = OBSTACLE_NUM
                 self.map_env[i] = self.sidewalk
-        # Setting finish line
-        self.map_env[self.y_chunk_multiplier - 1][self.end_x_pos] = FINISH_NUM
 
     def get_env_state(self):
         self.__find_player_pos()
@@ -106,7 +109,7 @@ class Gameboard(pygame.sprite.Sprite):
         if move_to_down[0] <= self.y_chunk_multiplier:
             possible_actions.append("d")
 
-        print(possible_actions)
+        return possible_actions
 
     def init_cars(self):
         if self.car_spawn_counter > 5:
