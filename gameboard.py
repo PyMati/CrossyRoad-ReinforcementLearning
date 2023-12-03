@@ -67,27 +67,6 @@ class Gameboard(pygame.sprite.Sprite):
     def get_map_state(self):
         return self.map_env
 
-    def is_legal(self, newpos) -> bool:
-        newy = newpos[0]
-        newx = newpos[1]
-        if newy < 0 or newy >= self.y_chunk_multiplier:
-            return False
-        if newx < 0 or newx >= self.x_chunk_multiplier:
-            return False
-        if self.env[newy][newx] == OBSTACLE_NUM:
-            return False
-        return True
-
-    def check_is_win(self) -> bool:
-        if self.env[self.y_chunk_multiplier - 1][self.end_x_pos] == PLAYER_NUM:
-            return True
-        return False
-
-    def check_is_lose(self) -> bool:
-        if PLAYER_NUM not in self.env:
-            return True
-        return False
-
     def init_cars(self):
         if self.car_spawn_counter > 5:
             for i in self.cars_lanes_indexes:
