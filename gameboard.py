@@ -1,4 +1,5 @@
 from hmac import new
+from re import S
 import pygame
 import numpy as np
 import random
@@ -15,10 +16,11 @@ from consts import (
     RIGHT_CAR_NUM,
     CAR_CHANCE,
 )
+from player import Player
 
 
 class Gameboard(pygame.sprite.Sprite):
-    def __init__(self):
+    def __init__(self, players: list[Player]):
         super(Gameboard, self).__init__()
         self.x_chunk_multiplier = X_CHUNK_SIZE
         self.y_chunk_multiplier = Y_CHUNK_SIZE
@@ -27,7 +29,7 @@ class Gameboard(pygame.sprite.Sprite):
 
         self.is_win = False
 
-        self.player_pos = [0, 0]
+        self.players = players
 
         self.cars_lanes_indexes = []
         self.active_cars: list[Car] = []
@@ -36,13 +38,11 @@ class Gameboard(pygame.sprite.Sprite):
 
         # Setting player env
         self.env = np.zeros((self.y_chunk_multiplier, self.x_chunk_multiplier))
+
         # Setting finish line
         self.env[self.y_chunk_multiplier - 1][self.end_x_pos] = FINISH_NUM
-        # Setting player start position
-        self.env[0][0] = PLAYER_NUM
 
-        self.map_env = np.zeros(
-            (self.y_chunk_multiplier, self.x_chunk_multiplier))
+        self.map_env = np.zeros((self.y_chunk_multiplier, self.x_chunk_multiplier))
         self.__prepare_map()
         # Setting finish line
         self.map_env[self.y_chunk_multiplier - 1][self.end_x_pos] = FINISH_NUM
@@ -56,13 +56,11 @@ class Gameboard(pygame.sprite.Sprite):
             else:
                 self.sidewalk = np.zeros((self.x_chunk_multiplier))
                 if random.random() < OBSTACLE_CHANCE and i != 0:
-                    obstacle_index = random.randint(
-                        0, self.x_chunk_multiplier - 1)
+                    obstacle_index = random.randint(0, self.x_chunk_multiplier - 1)
                     self.env[i][obstacle_index] = OBSTACLE_NUM
                 self.map_env[i] = self.sidewalk
 
     def get_env_state(self):
-        self.__find_player_pos()
         return self.env
 
     def get_map_state(self):
@@ -79,10 +77,6 @@ class Gameboard(pygame.sprite.Sprite):
             return False
         return True
 
-    def change_player_pos(self, oldpos: tuple, newpos: tuple):
-        self.env[oldpos[0]][oldpos[1]] = 0
-        self.env[newpos[0]][newpos[1]] = PLAYER_NUM
-
     def check_is_win(self) -> bool:
         if self.env[self.y_chunk_multiplier - 1][self.end_x_pos] == PLAYER_NUM:
             return True
@@ -92,24 +86,6 @@ class Gameboard(pygame.sprite.Sprite):
         if PLAYER_NUM not in self.env:
             return True
         return False
-
-    def get_possible_actions(self) -> list[str]:
-        possible_actions = []
-        player_y_pos = self.player_pos[0]
-        player_x_pos = self.player_pos[1]
-
-        move_to_right = [player_y_pos, player_x_pos + 1]
-        move_to_left = [player_y_pos, player_x_pos - 1]
-        move_to_down = [player_y_pos + 1, player_x_pos]
-
-        if move_to_right[1] > 0 and move_to_right[1] < self.x_chunk_multiplier:
-            possible_actions.append("r")
-        if move_to_left[1] >= 0 and move_to_left[1] < self.x_chunk_multiplier:
-            possible_actions.append("l")
-        if move_to_down[0] <= self.y_chunk_multiplier:
-            possible_actions.append("d")
-
-        return possible_actions
 
     def init_cars(self):
         if self.car_spawn_counter > 5:
@@ -122,6 +98,7 @@ class Gameboard(pygame.sprite.Sprite):
             self.car_spawn_counter += 1
 
     def move_cars(self):
+        self.__clear_cars()
         if self.car_counter > 10:
             for car in self.active_cars:
                 car.check_state()
@@ -136,9 +113,14 @@ class Gameboard(pygame.sprite.Sprite):
         else:
             self.car_counter += 1
 
-    def __find_player_pos(self):
-        for i in range(self.env.shape[0]):
-            for j in range(self.env.shape[1]):
-                if self.env[i][j] == PLAYER_NUM:
-                    self.player_pos[0] = i
-                    self.player_pos[1] = j
+    def __clear_cars(self):
+        cars_to_remove = []
+        for car in self.active_cars:
+            if car.pos[1] < 0 or car.pos[1] > self.x_chunk_multiplier:
+                cars_to_remove.append(car)
+
+        for car in cars_to_remove:
+            self.active_cars.remove(car)
+
+    def get_active_cars_pos(self):
+        return [car.pos for car in self.active_cars]

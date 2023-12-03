@@ -26,7 +26,7 @@ class Car(pygame.sprite.Sprite):
         return self.pos
 
     def check_state(self):
-        if self.pos[1] >= GAME_CHUNK_SIZE or self.pos[1] < 0:
+        if self.pos[1] >= X_CHUNK_SIZE or self.pos[1] < 0:
             self.kill()
 
     def move(self):
