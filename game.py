@@ -7,7 +7,7 @@ from player import Player
 import random
 
 
-# TODO: Wykryj, ktory gracz wygral
+# TODO: Dodaj kolizje z  samochodami
 # TODO: Postaraj sie juz zaczac pisac monte carlo
 def main():
     pygame.init()
