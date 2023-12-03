@@ -1,5 +1,6 @@
 from hmac import new
 from re import S
+from turtle import pos
 import pygame
 import numpy as np
 import random
@@ -124,3 +125,39 @@ class Gameboard(pygame.sprite.Sprite):
 
     def get_active_cars_pos(self):
         return [car.pos for car in self.active_cars]
+
+    def __can_go_right(self, x, y):
+        if x != self.x_chunk_multiplier - 1 and self.env[y][x + 1] != OBSTACLE_NUM:
+            return ["r"]
+        return []
+
+    def __can_go_left(self, x, y):
+        if x != 0 and self.env[y][x - 1] != OBSTACLE_NUM:
+            return ["l"]
+        return []
+
+    def __can_go_down(self, x, y):
+        if y != self.y_chunk_multiplier - 1 and self.env[y + 1][x] != OBSTACLE_NUM:
+            return ["d"]
+        return []
+
+    def update_possible_players_actions(self):
+        for player in self.players:
+            position = player.get_player_pos()
+
+            x = position[1]
+            y = position[0]
+
+            actions = []
+            actions += self.__can_go_down(x, y)
+            actions += self.__can_go_right(x, y)
+            actions += self.__can_go_left(x, y)
+
+            player.update_possible_actions(actions)
+
+    def check_end_game(self):
+        for player in self.players:
+            if player.get_player_pos() == [self.y_chunk_multiplier - 1, self.end_x_pos]:
+                return player.get_player_type()
+
+        return False

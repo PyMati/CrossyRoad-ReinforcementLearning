@@ -4,8 +4,11 @@ from screen import Screen
 from gameboard import Gameboard
 from consts import REAL_PLAYER_POS, AGENT_POS
 from player import Player
+import random
 
 
+# TODO: Wykryj, ktory gracz wygral
+# TODO: Postaraj sie juz zaczac pisac monte carlo
 def main():
     pygame.init()
 
@@ -39,8 +42,17 @@ def main():
             if keys[pygame.K_DOWN]:
                 real_player.go_down()
 
+        if type(gameboard.check_end_game()) == str:
+            print(gameboard.check_end_game(), "won")
+            running = False
+
         gamestate = gameboard.get_env_state()
         game_screen.set_gamestate(gamestate)
+
+        action = random.choice(agent.get_possible_actions())
+        action()
+
+        gameboard.update_possible_players_actions()
 
         gameboard.init_cars()
         gameboard.move_cars()
