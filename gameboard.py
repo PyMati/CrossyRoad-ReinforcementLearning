@@ -1,16 +1,18 @@
 from hmac import new
 from re import S
+from tkinter import LEFT
 from turtle import pos
 import pygame
 import numpy as np
 import random
 from car import Car
 from consts import (
+    CAR_REWARD,
     OBSTACLE_NUM,
     X_CHUNK_SIZE,
     Y_CHUNK_SIZE,
     FINISH_NUM,
-    PLAYER_NUM,
+    FINISH_LINE_REWARD,
     OBSTACLE_CHANCE,
     OBSTACLE_NUM,
     LEFT_CAR_NUM,
@@ -43,10 +45,16 @@ class Gameboard(pygame.sprite.Sprite):
         # Setting finish line
         self.env[self.y_chunk_multiplier - 1][self.end_x_pos] = FINISH_NUM
 
+        # Setting reward graph
+        self.reward_map = np.zeros((self.y_chunk_multiplier, self.x_chunk_multiplier))
+
         self.map_env = np.zeros((self.y_chunk_multiplier, self.x_chunk_multiplier))
         self.__prepare_map()
         # Setting finish line
         self.map_env[self.y_chunk_multiplier - 1][self.end_x_pos] = FINISH_NUM
+        self.reward_map[self.y_chunk_multiplier - 1][
+            self.end_x_pos
+        ] = FINISH_LINE_REWARD
 
     def __prepare_map(self):
         for i in range(self.y_chunk_multiplier):
@@ -66,6 +74,17 @@ class Gameboard(pygame.sprite.Sprite):
 
     def get_map_state(self):
         return self.map_env
+
+    def update_reward_map(self):
+        for i in range(self.y_chunk_multiplier):
+            for j in range(self.x_chunk_multiplier):
+                if self.reward_map[i][j] == FINISH_LINE_REWARD:
+                    print("pass")
+                    continue
+                elif self.env[i][j] == RIGHT_CAR_NUM or self.env[i][j] == LEFT_CAR_NUM:
+                    self.reward_map[i][j] = CAR_REWARD
+                else:
+                    self.reward_map[i][j] = 0
 
     def init_cars(self):
         if self.car_spawn_counter > 5:

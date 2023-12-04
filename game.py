@@ -51,14 +51,16 @@ def main():
 
         gameboard.check_collision()
 
-        if len(agent.get_possible_actions()) > 0:
-            action = random.choice(agent.get_possible_actions())
-            action()
+        # if len(agent.get_possible_actions()) > 0:
+        #     action = random.choice(agent.get_possible_actions())
+        #     action()
 
         gameboard.update_possible_players_actions()
 
         gameboard.init_cars()
         gameboard.move_cars()
+        gameboard.update_reward_map()
+        print(gameboard.reward_map)
 
         game_screen.run_screen()
 
