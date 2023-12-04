@@ -49,8 +49,11 @@ def main():
         gamestate = gameboard.get_env_state()
         game_screen.set_gamestate(gamestate)
 
-        action = random.choice(agent.get_possible_actions())
-        action()
+        gameboard.check_collision()
+
+        if len(agent.get_possible_actions()) > 0:
+            action = random.choice(agent.get_possible_actions())
+            action()
 
         gameboard.update_possible_players_actions()
 

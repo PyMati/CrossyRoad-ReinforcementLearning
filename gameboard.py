@@ -85,9 +85,9 @@ class Gameboard(pygame.sprite.Sprite):
                 car.move()
                 oldpos = car.prv_pos
                 newpos = car.pos
-                if self.is_legal(oldpos):
+                if oldpos[1] >= 0 and oldpos[1] < self.x_chunk_multiplier:
                     self.env[oldpos[0]][oldpos[1]] = 0
-                if self.is_legal(newpos):
+                if newpos[1] >= 0 and newpos[1] < self.x_chunk_multiplier:
                     self.env[newpos[0]][newpos[1]] = car.dir
             self.car_counter = 0
         else:
@@ -135,8 +135,20 @@ class Gameboard(pygame.sprite.Sprite):
             player.update_possible_actions(actions)
 
     def check_end_game(self):
+        dead_players = 0
         for player in self.players:
             if player.get_player_pos() == [self.y_chunk_multiplier - 1, self.end_x_pos]:
                 return player.get_player_type()
+            if player.is_dead:
+                dead_players += 1
+
+        if dead_players == len(self.players):
+            return "env"
 
         return False
+
+    def check_collision(self):
+        for player in self.players:
+            for car in self.active_cars:
+                if player.get_player_pos() == car.get_pos():
+                    player.kill_player()

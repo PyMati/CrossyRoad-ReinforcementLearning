@@ -17,6 +17,8 @@ class Player(pygame.sprite.Sprite):
 
         self.player_type = player_type
 
+        self.is_dead = False
+
     def __swap_direction(self, action):
         if action == self.go_right and self.dir == PLAYER_DIR_LEFT:
             self.dir = PLAYER_DIR_RIGHT
@@ -52,16 +54,21 @@ class Player(pygame.sprite.Sprite):
     def update_possible_actions(self, possible_moves: list[str]):
         poss_actions = []
 
-        if "r" in possible_moves:
-            poss_actions.append(self.go_right)
+        if not self.is_dead:
+            if "r" in possible_moves:
+                poss_actions.append(self.go_right)
 
-        if "l" in possible_moves:
-            poss_actions.append(self.go_left)
+            if "l" in possible_moves:
+                poss_actions.append(self.go_left)
 
-        if "d" in possible_moves:
-            poss_actions.append(self.go_down)
+            if "d" in possible_moves:
+                poss_actions.append(self.go_down)
 
         self.possible_actions = poss_actions
 
     def get_possible_actions(self):
         return self.possible_actions
+
+    def kill_player(self):
+        self.is_dead = True
+        self.position = [-1, -1]
