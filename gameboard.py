@@ -1,7 +1,4 @@
-from hmac import new
-from re import S
-from tkinter import LEFT
-from turtle import pos
+from copy import deepcopy
 import pygame
 import numpy as np
 import random
@@ -79,12 +76,17 @@ class Gameboard(pygame.sprite.Sprite):
         for i in range(self.y_chunk_multiplier):
             for j in range(self.x_chunk_multiplier):
                 if self.reward_map[i][j] == FINISH_LINE_REWARD:
-                    print("pass")
                     continue
                 elif self.env[i][j] == RIGHT_CAR_NUM or self.env[i][j] == LEFT_CAR_NUM:
                     self.reward_map[i][j] = CAR_REWARD
                 else:
-                    self.reward_map[i][j] = 0
+                    self.reward_map[i][j] = (
+                        FINISH_LINE_REWARD
+                        - (
+                            (j - self.end_x_pos) ** 2
+                            + (i - (self.y_chunk_multiplier - 1)) ** 2
+                        )
+                    ) * 0.1
 
     def init_cars(self):
         if self.car_spawn_counter > 5:
@@ -171,3 +173,6 @@ class Gameboard(pygame.sprite.Sprite):
             for car in self.active_cars:
                 if player.get_player_pos() == car.get_pos():
                     player.kill_player()
+
+    def get_reward(self, player_pos):
+        return self.reward_map[player_pos[0]][player_pos[1]]

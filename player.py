@@ -72,3 +72,6 @@ class Player(pygame.sprite.Sprite):
     def kill_player(self):
         self.is_dead = True
         self.position = [-1, -1]
+
+    def take_action(self, action):
+        action()

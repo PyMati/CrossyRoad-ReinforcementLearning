@@ -4,11 +4,9 @@ from screen import Screen
 from gameboard import Gameboard
 from consts import REAL_PLAYER_POS, AGENT_POS
 from player import Player
-import random
+from agent import MonteCarloAgent
 
 
-# TODO: Dodaj kolizje z  samochodami
-# TODO: Postaraj sie juz zaczac pisac monte carlo
 def main():
     pygame.init()
 
@@ -26,6 +24,10 @@ def main():
     game_screen.set_map(gamemap)
 
     gameboard.init_cars()
+    gameboard.update_reward_map()
+
+    monte_carlo_agent = MonteCarloAgent(agent, gameboard)
+    monte_carlo_agent.play_game()
 
     running = True
     while running:
@@ -51,16 +53,13 @@ def main():
 
         gameboard.check_collision()
 
-        # if len(agent.get_possible_actions()) > 0:
-        #     action = random.choice(agent.get_possible_actions())
-        #     action()
-
         gameboard.update_possible_players_actions()
 
         gameboard.init_cars()
         gameboard.move_cars()
         gameboard.update_reward_map()
-        print(gameboard.reward_map)
+
+        monte_carlo_agent.play_game()
 
         game_screen.run_screen()
 
