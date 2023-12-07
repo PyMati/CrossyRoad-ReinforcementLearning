@@ -15,12 +15,8 @@ class Car(pygame.sprite.Sprite):
 
         self.prv_pos = [lane, 0]
 
-        if random.random() > OBSTACLE_CHANCE:
-            self.dir = LEFT_CAR_NUM
-            self.pos = [lane, 0]
-        else:
-            self.dir = RIGHT_CAR_NUM
-            self.pos = [lane, X_CHUNK_SIZE - 1]
+        self.dir = RIGHT_CAR_NUM
+        self.pos = [lane, X_CHUNK_SIZE]
 
     def get_pos(self):
         return self.pos

@@ -43,9 +43,11 @@ class Gameboard(pygame.sprite.Sprite):
         self.env[self.y_chunk_multiplier - 1][self.end_x_pos] = FINISH_NUM
 
         # Setting reward graph
-        self.reward_map = np.zeros((self.y_chunk_multiplier, self.x_chunk_multiplier))
+        self.reward_map = np.zeros(
+            (self.y_chunk_multiplier, self.x_chunk_multiplier))
 
-        self.map_env = np.zeros((self.y_chunk_multiplier, self.x_chunk_multiplier))
+        self.map_env = np.zeros(
+            (self.y_chunk_multiplier, self.x_chunk_multiplier))
         self.__prepare_map()
         # Setting finish line
         self.map_env[self.y_chunk_multiplier - 1][self.end_x_pos] = FINISH_NUM
@@ -62,7 +64,8 @@ class Gameboard(pygame.sprite.Sprite):
             else:
                 self.sidewalk = np.zeros((self.x_chunk_multiplier))
                 if random.random() < OBSTACLE_CHANCE and i != 0:
-                    obstacle_index = random.randint(0, self.x_chunk_multiplier - 1)
+                    obstacle_index = random.randint(
+                        0, self.x_chunk_multiplier - 1)
                     self.env[i][obstacle_index] = OBSTACLE_NUM
                 self.map_env[i] = self.sidewalk
 
@@ -86,14 +89,13 @@ class Gameboard(pygame.sprite.Sprite):
                             (j - self.end_x_pos) ** 2
                             + (i - (self.y_chunk_multiplier - 1)) ** 2
                         )
-                    ) * 0.1
+                    ) * 0.09
 
     def init_cars(self):
         if self.car_spawn_counter > 5:
             for i in self.cars_lanes_indexes:
                 if LEFT_CAR_NUM not in self.env[i] and RIGHT_CAR_NUM not in self.env[i]:
-                    if random.random() < CAR_CHANCE:
-                        self.active_cars.append(Car(i))
+                    self.active_cars.append(Car(i))
             self.car_spawn_counter = 0
         else:
             self.car_spawn_counter += 1
@@ -141,6 +143,11 @@ class Gameboard(pygame.sprite.Sprite):
             return ["d"]
         return []
 
+    def __can_go_up(self, x, y):
+        if y - 1 > -1 and self.env[y - 1][x] != OBSTACLE_NUM:
+            return ["u"]
+        return []
+
     def update_possible_players_actions(self):
         for player in self.players:
             position = player.get_player_pos()
@@ -149,9 +156,12 @@ class Gameboard(pygame.sprite.Sprite):
             y = position[0]
 
             actions = []
-            actions += self.__can_go_down(x, y)
-            actions += self.__can_go_right(x, y)
-            actions += self.__can_go_left(x, y)
+            if not player.is_dead:
+                actions += self.__can_go_down(x, y)
+                actions += self.__can_go_right(x, y)
+                actions += self.__can_go_left(x, y)
+                actions += self.__can_go_up(x, y)
+                actions += ["s"]
 
             player.update_possible_actions(actions)
 
@@ -159,20 +169,31 @@ class Gameboard(pygame.sprite.Sprite):
         dead_players = 0
         for player in self.players:
             if player.get_player_pos() == [self.y_chunk_multiplier - 1, self.end_x_pos]:
+                player.has_won = True
                 return player.get_player_type()
             if player.is_dead:
                 dead_players += 1
+            if player.has_won:
+                return True
 
         if dead_players == len(self.players):
-            return "env"
+            return True
 
         return False
 
     def check_collision(self):
         for player in self.players:
             for car in self.active_cars:
-                if player.get_player_pos() == car.get_pos():
+                if player.get_player_pos() == car.get_pos() and player.has_won != True:
                     player.kill_player()
 
     def get_reward(self, player_pos):
         return self.reward_map[player_pos[0]][player_pos[1]]
+
+    def develop_game(self):
+        self.check_end_game()
+        self.check_collision()
+        self.update_possible_players_actions()
+        self.init_cars()
+        self.move_cars()
+        self.update_reward_map()

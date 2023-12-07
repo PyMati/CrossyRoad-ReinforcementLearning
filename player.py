@@ -18,6 +18,7 @@ class Player(pygame.sprite.Sprite):
         self.player_type = player_type
 
         self.is_dead = False
+        self.has_won = False
 
     def __swap_direction(self, action):
         if action == self.go_right and self.dir == PLAYER_DIR_LEFT:
@@ -42,6 +43,14 @@ class Player(pygame.sprite.Sprite):
             self.prv_position = position
             self.position = [self.position[0] + 1, self.position[1]]
 
+    def go_up(self):
+        if self.go_up in self.possible_actions:
+            self.prv_position = position
+            self.position = [self.position[0] - 1, self.position[1]]
+
+    def stay(self):
+        pass
+
     def get_old_pos(self):
         return self.prv_position
 
@@ -63,6 +72,12 @@ class Player(pygame.sprite.Sprite):
 
             if "d" in possible_moves:
                 poss_actions.append(self.go_down)
+
+            if "s" in possible_moves:
+                poss_actions.append(self.stay)
+
+            if "u" in possible_moves:
+                poss_actions.append(self.go_up)
 
         self.possible_actions = poss_actions
 

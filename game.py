@@ -12,7 +12,8 @@ def main():
 
     agent = Player(AGENT_POS, "agent")
     real_player = Player(REAL_PLAYER_POS, "real")
-    players = [agent, real_player]
+    # players = [agent, real_player]
+    players = [agent]
 
     gameboard = Gameboard(players)
     game_screen = Screen(players)
@@ -23,11 +24,9 @@ def main():
     game_screen.set_gamestate(gamestate)
     game_screen.set_map(gamemap)
 
-    gameboard.init_cars()
     gameboard.update_reward_map()
 
     monte_carlo_agent = MonteCarloAgent(agent, gameboard)
-    monte_carlo_agent.play_game()
 
     running = True
     while running:
@@ -43,6 +42,8 @@ def main():
                 real_player.go_left()
             if keys[pygame.K_DOWN]:
                 real_player.go_down()
+            if keys[pygame.K_UP]:
+                real_player.go_up()
 
         if type(gameboard.check_end_game()) == str:
             print(gameboard.check_end_game(), "won")
@@ -51,15 +52,9 @@ def main():
         gamestate = gameboard.get_env_state()
         game_screen.set_gamestate(gamestate)
 
-        gameboard.check_collision()
-
-        gameboard.update_possible_players_actions()
-
-        gameboard.init_cars()
-        gameboard.move_cars()
-        gameboard.update_reward_map()
-
         monte_carlo_agent.play_game()
+
+        gameboard.develop_game()
 
         game_screen.run_screen()
 
