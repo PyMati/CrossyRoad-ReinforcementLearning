@@ -102,7 +102,7 @@ class Gameboard(pygame.sprite.Sprite):
 
     def move_cars(self):
         self.__clear_cars()
-        if self.car_counter > 10:
+        if self.car_counter > 9:
             for car in self.active_cars:
                 car.check_state()
                 car.move()
