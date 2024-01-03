@@ -34,7 +34,7 @@ def main():
     gameboard.update_reward_map()
     print(gameboard.reward_map)
 
-    qa = QLearningAgent(gameboard, q_agent, True)
+    qa = QLearningAgent(gameboard, q_agent, False)
     # psa = PassiveLearningAgent(gameboard, passive_agent)
     # monte_carlo_agent = MonteCarloAgent(agent, gameboard)
 
