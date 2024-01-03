@@ -127,6 +127,12 @@ class QLearningAgent:
         else:
             pass
 
+        reward = (
+            self.gameboard.get_reward(next_state) if not self.player.has_won else 100
+        )
+        if self.is_training:
+            self.update(reward, next_state)
+
         if action == "u":
             self.player.go_up()
         elif action == "r":
@@ -137,12 +143,6 @@ class QLearningAgent:
             self.player.go_down()
         else:
             pass
-
-        reward = (
-            self.gameboard.get_reward(next_state) if not self.player.has_won else 100
-        )
-        if self.is_training:
-            self.update(reward, next_state)
 
     def update(self, reward, next_state):
         current_state = str(self.player.get_player_pos())
