@@ -92,6 +92,7 @@ class Gameboard(pygame.sprite.Sprite):
                 elif self.env[i][j] == RIGHT_CAR_NUM or self.env[i][j] == LEFT_CAR_NUM:
                     self.reward_map[i][j] = CAR_REWARD
                 else:
+                    # if not self.static_map:
                     self.reward_map[i][j] = (
                         FINISH_LINE_REWARD
                         - (
@@ -99,6 +100,8 @@ class Gameboard(pygame.sprite.Sprite):
                             + (i - (self.y_chunk_multiplier - 1)) ** 2
                         )
                     ) * 0.09
+                # else:
+                #     self.reward_map[i][j] = 0
 
     def init_cars(self):
         if self.car_spawn_counter > 5:
@@ -216,7 +219,7 @@ class Gameboard(pygame.sprite.Sprite):
         return self.reward_map[player_pos[0]][player_pos[1]]
 
     def develop_game(self):
-        self.check_end_game()
+        # self.check_end_game() odkomentuj po wytrenowaniu agenta
         if self.static_map:
             self.check_static_end()
         else:

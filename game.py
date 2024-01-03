@@ -6,6 +6,7 @@ from consts import REAL_PLAYER_POS, AGENT_POS, PASSIVE_AGENT
 from player import Player
 from monte_carlo_agent import MonteCarloAgent
 from passive_learning_agent import PassiveLearningAgent
+from q_learning_agent import QLearningAgent
 
 
 def main():
@@ -17,8 +18,9 @@ def main():
     agent = Player(AGENT_POS, "agent")
     real_player = Player(REAL_PLAYER_POS, "real")
     passive_agent = Player(PASSIVE_AGENT, "passive_agent")
+    q_agent = Player(PASSIVE_AGENT, "q_learning_agent")
     # players = [agent, real_player]
-    players = [passive_agent]
+    players = [q_agent]
 
     gameboard = Gameboard(players, static_map)
     game_screen = Screen(players)
@@ -30,7 +32,10 @@ def main():
     game_screen.set_map(gamemap)
 
     gameboard.update_reward_map()
-    psa = PassiveLearningAgent(gameboard, passive_agent)
+    print(gameboard.reward_map)
+
+    qa = QLearningAgent(gameboard, q_agent, False)
+    # psa = PassiveLearningAgent(gameboard, passive_agent)
     # monte_carlo_agent = MonteCarloAgent(agent, gameboard)
 
     running = True
@@ -52,14 +57,16 @@ def main():
 
         if type(gameboard.check_end_game()) == str:
             print(gameboard.check_end_game(), "won")
-            running = False
+            # running = False
 
         gamestate = gameboard.get_env_state()
         game_screen.set_gamestate(gamestate)
 
-        psa.take_action()
+        # Passive learning agent / runs only with static_map = True
+        # psa.take_action()
         # Monte carlo / runs only with static_map = False
         # monte_carlo_agent.play_game()
+        qa.take_action()
 
         gameboard.develop_game()
 

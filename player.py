@@ -6,6 +6,7 @@ from consts import PLAYER_DIR_LEFT, PLAYER_DIR_RIGHT, REAL_PLAYER_POS
 class Player(pygame.sprite.Sprite):
     def __init__(self, position: list[int], player_type: str):
         super(Player, self).__init__()
+        self.start_pos = position
         self.prv_position = position
         self.position = position
         if self.position == REAL_PLAYER_POS:
@@ -90,3 +91,8 @@ class Player(pygame.sprite.Sprite):
 
     def take_action(self, action):
         action()
+
+    def reset_pos(self):
+        self.position = self.start_pos
+        self.is_dead = False
+        self.has_won = False
