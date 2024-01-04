@@ -2,20 +2,27 @@ from numpy import real
 import pygame
 from screen import Screen
 from gameboard import Gameboard
-from consts import REAL_PLAYER_POS, AGENT_POS
+from consts import REAL_PLAYER_POS, AGENT_POS, PASSIVE_AGENT
 from player import Player
-from agent import MonteCarloAgent
+from monte_carlo_agent import MonteCarloAgent
+from passive_learning_agent import PassiveLearningAgent
+from q_learning_agent import QLearningAgent
 
 
 def main():
     pygame.init()
 
+    # Change if you want to use monte carlo agent
+    static_map: bool = True
+
     agent = Player(AGENT_POS, "agent")
     real_player = Player(REAL_PLAYER_POS, "real")
+    passive_agent = Player(PASSIVE_AGENT, "passive_agent")
+    q_agent = Player(PASSIVE_AGENT, "q_learning_agent")
     # players = [agent, real_player]
-    players = [agent]
+    players = [q_agent]
 
-    gameboard = Gameboard(players)
+    gameboard = Gameboard(players, static_map)
     game_screen = Screen(players)
 
     gamestate = gameboard.get_env_state()
@@ -25,8 +32,11 @@ def main():
     game_screen.set_map(gamemap)
 
     gameboard.update_reward_map()
+    print(gameboard.reward_map)
 
-    monte_carlo_agent = MonteCarloAgent(agent, gameboard)
+    qa = QLearningAgent(gameboard, q_agent, False)
+    # psa = PassiveLearningAgent(gameboard, passive_agent)
+    # monte_carlo_agent = MonteCarloAgent(agent, gameboard)
 
     running = True
     while running:
@@ -47,12 +57,16 @@ def main():
 
         if type(gameboard.check_end_game()) == str:
             print(gameboard.check_end_game(), "won")
-            running = False
+            # running = False
 
         gamestate = gameboard.get_env_state()
         game_screen.set_gamestate(gamestate)
 
-        monte_carlo_agent.play_game()
+        # Passive learning agent / runs only with static_map = True
+        # psa.take_action()
+        # Monte carlo / runs only with static_map = False
+        # monte_carlo_agent.play_game()
+        qa.take_action()
 
         gameboard.develop_game()
 
