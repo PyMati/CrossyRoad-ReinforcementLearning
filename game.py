@@ -7,7 +7,7 @@ from player import Player
 from monte_carlo_agent import MonteCarloAgent
 from passive_learning_agent import PassiveLearningAgent
 from q_learning_agent import QLearningAgent
-from q_learning_function_approximation import QLearningApproximationAgent
+from function_approximation import ApproximationAgent
 
 
 def main():
@@ -35,12 +35,11 @@ def main():
     game_screen.set_map(gamemap)
 
     gameboard.update_reward_map()
-    print(gameboard.reward_map)
 
     # monte_carlo_agent = MonteCarloAgent(agent, gameboard)
     # psa = PassiveLearningAgent(gameboard, passive_agent)
     # qa = QLearningAgent(gameboard, q_agent, False)
-    qa_ap = QLearningApproximationAgent(gameboard, q_ap_agent, True)
+    a_p = ApproximationAgent(gameboard, q_ap_agent, True)
 
     running = True
     while running:
@@ -72,7 +71,7 @@ def main():
         # psa.take_action()
         # Qlearning agent / runs only with static_map = True disable_traps = False
         # qa.take_action()
-        qa_ap.take_action()
+        a_p.take_action()
 
         gameboard.develop_game()
 
