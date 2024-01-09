@@ -7,22 +7,25 @@ from player import Player
 from monte_carlo_agent import MonteCarloAgent
 from passive_learning_agent import PassiveLearningAgent
 from q_learning_agent import QLearningAgent
+from q_learning_function_approximation import QLearningApproximationAgent
 
 
 def main():
     pygame.init()
 
     # Change if you want to use monte carlo agent
-    static_map: bool = True
+    static_map: bool = False
+    disable_traps: bool = True
 
-    agent = Player(AGENT_POS, "agent")
     real_player = Player(REAL_PLAYER_POS, "real")
+    agent = Player(AGENT_POS, "monte_carlo")
     passive_agent = Player(PASSIVE_AGENT, "passive_agent")
     q_agent = Player(PASSIVE_AGENT, "q_learning_agent")
-    # players = [agent, real_player]
-    players = [q_agent]
+    q_ap_agent = Player(PASSIVE_AGENT, "q_learning_approximation")
 
-    gameboard = Gameboard(players, static_map)
+    players = [q_ap_agent]
+
+    gameboard = Gameboard(players, static_map, disable_traps)
     game_screen = Screen(players)
 
     gamestate = gameboard.get_env_state()
@@ -34,9 +37,10 @@ def main():
     gameboard.update_reward_map()
     print(gameboard.reward_map)
 
-    qa = QLearningAgent(gameboard, q_agent, False)
-    # psa = PassiveLearningAgent(gameboard, passive_agent)
     # monte_carlo_agent = MonteCarloAgent(agent, gameboard)
+    # psa = PassiveLearningAgent(gameboard, passive_agent)
+    # qa = QLearningAgent(gameboard, q_agent, False)
+    qa_ap = QLearningApproximationAgent(gameboard, q_ap_agent, True)
 
     running = True
     while running:
@@ -62,11 +66,13 @@ def main():
         gamestate = gameboard.get_env_state()
         game_screen.set_gamestate(gamestate)
 
-        # Passive learning agent / runs only with static_map = True
-        # psa.take_action()
-        # Monte carlo / runs only with static_map = False
+        # Monte carlo / runs only with static_map = False disable_traps = False
         # monte_carlo_agent.play_game()
-        qa.take_action()
+        # Passive learning agent / runs only with static_map = True disable_traps = False
+        # psa.take_action()
+        # Qlearning agent / runs only with static_map = True disable_traps = False
+        # qa.take_action()
+        qa_ap.take_action()
 
         gameboard.develop_game()
 

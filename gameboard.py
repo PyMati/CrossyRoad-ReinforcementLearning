@@ -22,13 +22,14 @@ from player import Player
 
 
 class Gameboard(pygame.sprite.Sprite):
-    def __init__(self, players: list[Player], static_map: bool):
+    def __init__(self, players: list[Player], static_map: bool, disable_traps: bool):
         super(Gameboard, self).__init__()
         self.x_chunk_multiplier = X_CHUNK_SIZE
         self.y_chunk_multiplier = Y_CHUNK_SIZE
         self.static_map = static_map
+        self.disable_traps = disable_traps
 
-        if static_map:
+        if static_map or disable_traps:
             self.end_x_pos = self.x_chunk_multiplier - 1
         else:
             self.end_x_pos = random.randint(0, self.x_chunk_multiplier - 1)
@@ -67,7 +68,7 @@ class Gameboard(pygame.sprite.Sprite):
                 self.cars_lanes_indexes.append(i)
             else:
                 self.sidewalk = np.zeros((self.x_chunk_multiplier))
-                if not self.static_map:
+                if not self.static_map and not self.disable_traps:
                     if random.random() < OBSTACLE_CHANCE and i != 0:
                         obstacle_index = random.randint(0, self.x_chunk_multiplier - 1)
                         self.env[i][obstacle_index] = OBSTACLE_NUM
@@ -217,6 +218,9 @@ class Gameboard(pygame.sprite.Sprite):
 
     def get_reward(self, player_pos):
         return self.reward_map[player_pos[0]][player_pos[1]]
+
+    def get_cars_pos(self):
+        return [car.get_pos() for car in self.active_cars]
 
     def develop_game(self):
         # self.check_end_game() odkomentuj po wytrenowaniu agenta
