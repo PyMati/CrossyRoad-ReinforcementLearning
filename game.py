@@ -1,3 +1,4 @@
+from tkinter.tix import Tree
 from numpy import real
 import pygame
 from screen import Screen
@@ -71,9 +72,9 @@ def main():
         # psa.take_action()
         # Qlearning agent / runs only with static_map = True disable_traps = False
         # qa.take_action()
-        # a_p.take_action()
 
         gameboard.develop_game()
+        a_p.take_action()
 
         game_screen.run_screen()
 

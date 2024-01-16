@@ -50,11 +50,9 @@ class Gameboard(pygame.sprite.Sprite):
         self.env[self.y_chunk_multiplier - 1][self.end_x_pos] = FINISH_NUM
 
         # Setting reward graph
-        self.reward_map = np.zeros(
-            (self.y_chunk_multiplier, self.x_chunk_multiplier))
+        self.reward_map = np.zeros((self.y_chunk_multiplier, self.x_chunk_multiplier))
 
-        self.map_env = np.zeros(
-            (self.y_chunk_multiplier, self.x_chunk_multiplier))
+        self.map_env = np.zeros((self.y_chunk_multiplier, self.x_chunk_multiplier))
         self.__prepare_map()
         # Setting finish line
         self.map_env[self.y_chunk_multiplier - 1][self.end_x_pos] = FINISH_NUM
@@ -72,8 +70,7 @@ class Gameboard(pygame.sprite.Sprite):
                 self.sidewalk = np.zeros((self.x_chunk_multiplier))
                 if not self.static_map and not self.disable_traps:
                     if random.random() < OBSTACLE_CHANCE and i != 0:
-                        obstacle_index = random.randint(
-                            0, self.x_chunk_multiplier - 1)
+                        obstacle_index = random.randint(0, self.x_chunk_multiplier - 1)
                         self.env[i][obstacle_index] = OBSTACLE_NUM
                 self.map_env[i] = self.sidewalk
 
@@ -118,7 +115,7 @@ class Gameboard(pygame.sprite.Sprite):
 
     def move_cars(self):
         self.__clear_cars()
-        if self.car_counter > 9:
+        if self.car_counter > 7:
             for car in self.active_cars:
                 car.check_state()
                 car.move()
@@ -196,6 +193,8 @@ class Gameboard(pygame.sprite.Sprite):
         for player in self.players:
             if player.get_player_pos() == [self.y_chunk_multiplier - 1, self.end_x_pos]:
                 player.has_won = True
+                player.player_won_place = player.get_player_pos()
+                player.cars_set_player_won = self.get_active_cars_pos()
                 return player.get_player_type()
             if player.is_dead:
                 dead_players += 1
@@ -211,6 +210,8 @@ class Gameboard(pygame.sprite.Sprite):
         for player in self.players:
             for car in self.active_cars:
                 if player.get_player_pos() == car.get_pos() and player.has_won != True:
+                    player.player_kill_place = player.get_player_pos()
+                    player.cars_set_player_kill = self.get_active_cars_pos()
                     player.kill_player()
 
     def check_static_end(self):
@@ -226,7 +227,7 @@ class Gameboard(pygame.sprite.Sprite):
         return [car.get_pos() for car in self.active_cars]
 
     def develop_game(self):
-        # self.check_end_game() odkomentuj po wytrenowaniu agenta
+        self.check_end_game()
         if self.static_map:
             self.check_static_end()
         else:

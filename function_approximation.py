@@ -1,26 +1,35 @@
 from copy import deepcopy
+import random
+import stat
+from tracemalloc import is_tracing
 
-from sklearn.exceptions import NotFittedError
+from matplotlib.pylab import rand
 from player import Player
 from gameboard import Gameboard
 from consts import X_CHUNK_SIZE, Y_CHUNK_SIZE
-from sklearn.ensemble import RandomForestClassifier
 import numpy as np
-import pickle
+import json
 
 
 class ApproximationAgent:
     def __init__(self, gameboard: Gameboard, player: Player, train: bool):
-        self.is_training = train
-        self.load_model()
-
+        # Needed objects
         self.player = player
         self.gameboard = gameboard
 
-        self.all_possible_car_states = 9
-        self.possible_cars_pos = []
-        self.reward_maps = {}
-        self.car_states_map = {}
+        # Training aprams
+        self.is_training = train
+        self.are_weights_loaded = True
+
+        self.alpha = 0.1
+        self.gamma = 0.9
+        self.epsilon = 0.5
+
+        self.features_num = 11
+        self.__load_weights()
+
+        if not self.are_weights_loaded:
+            self.__init_weights()
 
         self.numbers_actions_classes = {
             0: "u",
@@ -38,26 +47,23 @@ class ApproximationAgent:
             "s": 4,
         }
 
+        self.all_possible_car_states = 9
+        self.possible_cars_pos = []
+        self.reward_maps = {}
+
         self.__init_all_car_states()
 
         self.counter = 0
 
-        self.alpha = 0.1
-        self.gamma = 0.9
-        self.epsilon = 0.3
-
-        self.episodes = 0
-
         self.states = []
         self.possible_actions = {}
 
-        self.__init_vals()
+        self.prv_state = []
 
-        print(f"Settings: {self.alpha} {self.gamma} {self.epsilon}")
+        self.__init_vals()
 
     def __init_all_car_states(self):
         gameboard_copy = deepcopy(self.gameboard)
-        state_index = 0
         while len(self.possible_cars_pos) != self.all_possible_car_states:
             pos = gameboard_copy.get_cars_pos()
             if pos in self.possible_cars_pos:
@@ -65,8 +71,6 @@ class ApproximationAgent:
             else:
                 self.possible_cars_pos.append(pos)
                 self.reward_maps[str(pos)] = gameboard_copy.reward_map.copy()
-                self.car_states_map[str(pos)] = state_index
-                state_index += 1
 
             gameboard_copy.init_cars()
             gameboard_copy.move_cars()
@@ -84,118 +88,178 @@ class ApproximationAgent:
                     str(state)
                 ] = self.gameboard.get_possible_actions(state[0], state[1])
 
-    def take_action(self):
-        if self.counter == 10:
-            self.counter = 0
+    def __load_weights(self):
+        try:
+            with open("wh.json", "r") as file:
+                self.weights = np.array(json.load(file)["w"])
+        except FileNotFoundError:
+            self.are_weights_loaded = False
 
-            if self.player.is_dead:
-                player_pos = self.player.get_old_pos()
+    def __init_weights(self):
+        self.weights = np.random.rand(self.features_num)
+        with open("wh.json", "w") as file:
+            json.dump({"w": self.weights.tolist()}, file)
+
+    def __save_weigths(self):
+        with open("wh.json", "w") as file:
+            json.dump({"w": self.weights.tolist()}, file)
+
+    def __prepare_features(self, player_pos, cars_pos):
+        features = [*player_pos]
+
+        car_counter = 0
+        for pos in cars_pos:
+            features.append(pos[0])
+            features.append(pos[1])
+            car_counter += 1
+
+        while car_counter != 4:
+            features.append(-5)
+            features.append(-5)
+            car_counter += 1
+
+        distance_to_end = np.sqrt(
+            (player_pos[0] - self.gameboard.x_chunk_multiplier) ** 2
+            / self.gameboard.x_chunk_multiplier
+            + (player_pos[1] - self.gameboard.y_chunk_multiplier) ** 2
+            / self.gameboard.y_chunk_multiplier
+        )
+
+        features.append(distance_to_end)
+
+        features = [feature / 1000000 for feature in features]
+
+        return np.array(features)
+
+    def __approximate(self, features):
+        return np.dot(self.weights.astype(np.float64), features.astype(np.float64))
+
+    def calculate_error(self, reward, player_pos, cars_pos, next_state):
+        current_player_pos = player_pos
+        current_cars_pos = cars_pos
+        old_features = self.__prepare_features(
+            current_player_pos,
+            current_cars_pos,
+        )
+        future_cars = next_state.get_active_cars_pos()
+
+        try:
+            possible_actions = self.possible_actions[str(future_cars)][
+                str(next_state.players[0].get_player_pos())
+            ]
+        except:
+            return -10
+
+        action_val_dict = {}
+        for action in possible_actions:
+            if action == "r":
+                next_player_pos = [current_player_pos[0], current_player_pos[1] + 1]
+            elif action == "l":
+                next_player_pos = [current_player_pos[0], current_player_pos[1] - 1]
+            elif action == "u":
+                next_player_pos = [current_player_pos[0] - 1, current_player_pos[1]]
+            elif action == "d":
+                next_player_pos = [current_player_pos[0] + 1, current_player_pos[1]]
             else:
-                player_pos = self.player.get_player_pos()
+                next_player_pos = current_player_pos
 
-            map_state = self.gameboard.get_cars_pos()
+            features = self.__prepare_features(next_player_pos, future_cars)
+            action_val_dict[action] = self.__approximate(features)
 
-            features = np.array(
-                [
-                    player_pos[0],
-                    player_pos[1],
-                    self.car_states_map[str(map_state)],
+        best_action = max(action_val_dict, key=lambda k: action_val_dict[k])
+
+        return (
+            reward
+            + self.alpha * self.__approximate(action_val_dict[best_action])
+            - self.__approximate(old_features)
+        )
+
+    def update(self, reward, player_pos, cars_pos, next_state):
+        delta = self.calculate_error(reward, player_pos, cars_pos, next_state)
+        upd = self.alpha * delta * self.features_num
+        self.weights += upd
+        self.__save_weigths()
+
+    def get_best_action(self):
+        current_player_pos = self.player.get_player_pos()
+        current_cars_pos = self.gameboard.get_active_cars_pos()
+        possible_actions = self.possible_actions[str(current_cars_pos)][
+            str(current_player_pos)
+        ]
+
+        action_val_dict = {}
+        for action in possible_actions:
+            features = self.__prepare_features(current_player_pos, current_cars_pos)
+            action_val_dict[action] = self.__approximate(features)
+
+        best_value = max(action_val_dict.values())
+        best_actions = [
+            action for action, value in action_val_dict.items() if value == best_value
+        ]
+
+        # If there are multiple actions with the same maximum value, choose one randomly
+        best_action = random.choice(best_actions)
+
+        return best_action
+
+    def get_action(self):
+        r = np.random.random()
+        if r > self.epsilon:
+            return random.choice(
+                self.possible_actions[str(self.gameboard.get_active_cars_pos())][
+                    str(self.player.get_player_pos())
                 ]
             )
 
-            X = features.reshape(1, -1)
+        return self.get_best_action()
 
+    def take_action(self):
+        if self.counter == 7:
+            self.counter = 0
             if self.is_training:
-                try:
-                    current_q_value = self.decision_tree.predict(X)
-                except NotFittedError:
-                    current_q_value = 0
+                cr_player_pos = self.player.get_player_pos()
+                cr_cars_pos = self.gameboard.get_active_cars_pos()
+
+                state_copy = deepcopy(self.gameboard)
+                player_copy = deepcopy(self.player)
+                state_copy.players = [player_copy]
+
+                state_copy.init_cars()
+                state_copy.move_cars()
+                state_copy.update_reward_map()
 
                 if self.player.is_dead:
-                    reward = -10
+                    print("ZMARL", self.player.player_kill_place)
+                    self.player.reset_pos()
+                    self.update(
+                        -10,
+                        self.player.player_kill_place,
+                        self.player.cars_set_player_kill,
+                        self.gameboard,
+                    )
+                elif self.player.has_won:
+                    print("WYGRAL", cr_player_pos)
+                    self.update(10, cr_player_pos, cr_cars_pos, state_copy)
+                    self.player.reset_pos()
+                else:
+                    self.update(0, cr_player_pos, cr_cars_pos, state_copy)
 
-                reward = self.reward_maps[str(
-                    map_state)][str(player_pos)]
+                action = self.get_action()
+            else:
+                if self.player.is_dead or self.player.has_won:
+                    self.player.reset_pos()
 
-                self.decision_tree.fit(
-                    X=X, y=[self.actions_numbers_classes[action]])
+                action = self.get_best_action()
 
-                _, action = self.get_action()
-
-                self.save_model()
-
-            # self.__make_action(real_action)
-            if self.player.is_dead:
-                self.player.reset_pos()
+            if action == "r":
+                self.player.go_right()
+            elif action == "l":
+                self.player.go_left()
+            elif action == "u":
+                self.player.go_up()
+            elif action == "d":
+                self.player.go_down()
+            else:
+                self.player.stay()
         else:
             self.counter += 1
-            if self.player.is_dead:
-                self.player.reset_pos()
-
-    def get_best_next_q_value(self, map_state, player_pos):
-        possible_actions = self.possible_actions[str(
-            map_state)][str(player_pos)]
-        print(possible_actions)
-
-    # def update(self):
-    #     current_player_pos = self.player.get_player_pos()
-    #     cars_pos = self.gameboard.get_cars_pos()
-    #     possible_moves = self.possible_actions[str(
-    #         cars_pos)][str(current_player_pos)]
-
-    #     scores = {}
-    #     all_moves = ["u", "d", "l", "r", "u"]
-
-    #     new_q_value = current_q_value + self.alpha * (
-    #         reward + self.gamma * max_next_q_value - current_q_value
-    #     )
-
-    #     for move in possible_moves:
-    #         next_player_pos = current_player_pos.copy()
-    #         if move == "u":
-    #             next_player_pos[0] -= 1
-    #         elif move == "d":
-    #             next_player_pos[0] += 1
-    #         elif move == "l":
-    #             next_player_pos[1] -= 1
-    #         elif move == "r":
-    #             next_player_pos[1] += 1
-    #         else:
-    #             pass
-
-    #         scores[move] = self.reward_maps[str(cars_pos)
-    #                                         ][next_player_pos[0]][next_player_pos[1]]
-
-    #     for move in all_moves:
-    #         if move not in scores.keys():
-    #             scores[move] = 0
-
-    #     return scores, possible_moves
-
-    def __make_action(self, action):
-        if action == "u":
-            self.player.go_up()
-        elif action == "d":
-            self.player.go_down()
-        elif action == "l":
-            self.player.go_left()
-        elif action == "r":
-            self.player.go_right()
-        else:
-            pass
-
-    def save_model(self, model_filename="model.pkl"):
-        if self.is_training:
-            with open(model_filename, 'wb') as model_file:
-                pickle.dump(self.decision_tree, model_file)
-            print(f"Model saved as {model_filename}")
-
-    def load_model(self, model_filename="model.pkl"):
-        try:
-            with open(model_filename, 'rb') as model_file:
-                self.decision_tree = pickle.load(model_file)
-            print(f"Model loaded from {model_filename}")
-        except FileNotFoundError:
-            self.decision_tree = RandomForestClassifier()
-            print(
-                f"Model file '{model_filename}' not found. Training a new model.")
