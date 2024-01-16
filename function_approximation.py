@@ -23,7 +23,7 @@ class ApproximationAgent:
 
         self.alpha = 0.1
         self.gamma = 0.9
-        self.epsilon = 0.5
+        self.epsilon = 0.6
 
         self.features_num = 11
         self.__load_weights()
@@ -58,7 +58,7 @@ class ApproximationAgent:
         self.states = []
         self.possible_actions = {}
 
-        self.prv_state = []
+        self.prv_state: Gameboard = None
 
         self.__init_vals()
 
@@ -134,9 +134,9 @@ class ApproximationAgent:
     def __approximate(self, features):
         return np.dot(self.weights.astype(np.float64), features.astype(np.float64))
 
-    def calculate_error(self, reward, player_pos, cars_pos, next_state):
-        current_player_pos = player_pos
-        current_cars_pos = cars_pos
+    def calculate_error(self, reward, state, next_state):
+        current_player_pos = state.players[0].get_player_pos()
+        current_cars_pos = state.get_active_cars_pos()
         old_features = self.__prepare_features(
             current_player_pos,
             current_cars_pos,
@@ -148,7 +148,7 @@ class ApproximationAgent:
                 str(next_state.players[0].get_player_pos())
             ]
         except:
-            return -10
+            possible_actions = []
 
         action_val_dict = {}
         for action in possible_actions:
@@ -166,23 +166,25 @@ class ApproximationAgent:
             features = self.__prepare_features(next_player_pos, future_cars)
             action_val_dict[action] = self.__approximate(features)
 
-        best_action = max(action_val_dict, key=lambda k: action_val_dict[k])
+        if len(possible_actions) == 0:
+            return reward - self.__approximate(old_features)
+        else:
+            best_action = max(action_val_dict, key=lambda k: action_val_dict[k])
+            return (
+                reward
+                + self.alpha * self.__approximate(action_val_dict[best_action])
+                - self.__approximate(old_features)
+            )
 
-        return (
-            reward
-            + self.alpha * self.__approximate(action_val_dict[best_action])
-            - self.__approximate(old_features)
-        )
-
-    def update(self, reward, player_pos, cars_pos, next_state):
-        delta = self.calculate_error(reward, player_pos, cars_pos, next_state)
+    def update(self, reward, state, next_state):
+        delta = self.calculate_error(reward, state, next_state)
         upd = self.alpha * delta * self.features_num
         self.weights += upd
         self.__save_weigths()
 
-    def get_best_action(self):
-        current_player_pos = self.player.get_player_pos()
-        current_cars_pos = self.gameboard.get_active_cars_pos()
+    def get_best_action(self, state):
+        current_player_pos = state.players[0].get_player_pos()
+        current_cars_pos = state.get_active_cars_pos()
         possible_actions = self.possible_actions[str(current_cars_pos)][
             str(current_player_pos)
         ]
@@ -202,7 +204,7 @@ class ApproximationAgent:
 
         return best_action
 
-    def get_action(self):
+    def get_action(self, state):
         r = np.random.random()
         if r > self.epsilon:
             return random.choice(
@@ -211,45 +213,40 @@ class ApproximationAgent:
                 ]
             )
 
-        return self.get_best_action()
+        return self.get_best_action(state)
 
     def take_action(self):
         if self.counter == 7:
             self.counter = 0
             if self.is_training:
-                cr_player_pos = self.player.get_player_pos()
-                cr_cars_pos = self.gameboard.get_active_cars_pos()
-
-                state_copy = deepcopy(self.gameboard)
-                player_copy = deepcopy(self.player)
-                state_copy.players = [player_copy]
-
-                state_copy.init_cars()
-                state_copy.move_cars()
-                state_copy.update_reward_map()
-
-                if self.player.is_dead:
-                    print("ZMARL", self.player.player_kill_place)
-                    self.player.reset_pos()
-                    self.update(
-                        -10,
-                        self.player.player_kill_place,
-                        self.player.cars_set_player_kill,
-                        self.gameboard,
+                reward = 0
+                if self.prv_state is None:
+                    self.prv_state = deepcopy(self.gameboard)
+                    self.prv_state.players = [deepcopy(self.player)]
+                    action = random.choice(
+                        self.possible_actions[
+                            str(self.gameboard.get_active_cars_pos())
+                        ][str(self.player.get_player_pos())]
                     )
-                elif self.player.has_won:
-                    print("WYGRAL", cr_player_pos)
-                    self.update(10, cr_player_pos, cr_cars_pos, state_copy)
-                    self.player.reset_pos()
                 else:
-                    self.update(0, cr_player_pos, cr_cars_pos, state_copy)
+                    if self.player.is_dead:
+                        reward -= 1
+                    if self.player.has_won:
+                        reward += 1
 
-                action = self.get_action()
+                    self.update(reward, self.prv_state, self.gameboard)
+
+                    if self.player.is_dead or self.player.has_won:
+                        self.player.reset_pos()
+
+                    action = self.get_action(self.gameboard)
+                    self.prv_state = deepcopy(self.gameboard)
+                    self.prv_state.players = [deepcopy(self.player)]
             else:
                 if self.player.is_dead or self.player.has_won:
                     self.player.reset_pos()
 
-                action = self.get_best_action()
+                action = self.get_best_action(self.gameboard)
 
             if action == "r":
                 self.player.go_right()
@@ -261,5 +258,6 @@ class ApproximationAgent:
                 self.player.go_down()
             else:
                 self.player.stay()
+
         else:
             self.counter += 1
