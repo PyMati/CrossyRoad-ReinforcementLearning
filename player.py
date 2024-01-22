@@ -21,11 +21,8 @@ class Player(pygame.sprite.Sprite):
         self.is_dead = False
         self.has_won = False
 
-        self.player_kill_place = []
-        self.cars_set_player_kill = []
-
-        self.player_won_place = []
-        self.cars_set_player_won = []
+        self.win_player_state = None
+        self.lose_player_state = None
 
     def __swap_direction(self, action):
         if action == self.go_right and self.dir == PLAYER_DIR_LEFT:

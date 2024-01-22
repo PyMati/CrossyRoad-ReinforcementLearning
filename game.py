@@ -15,7 +15,7 @@ def main():
     pygame.init()
 
     # Change if you want to use monte carlo agent
-    static_map: bool = False
+    static_map: bool = True
     disable_traps: bool = True
 
     real_player = Player(REAL_PLAYER_POS, "real")
@@ -40,7 +40,7 @@ def main():
     # monte_carlo_agent = MonteCarloAgent(agent, gameboard)
     # psa = PassiveLearningAgent(gameboard, passive_agent)
     # qa = QLearningAgent(gameboard, q_agent, False)
-    a_p = ApproximationAgent(gameboard, q_ap_agent, True)
+    a_p = ApproximationAgent(gameboard, q_ap_agent, False)
 
     running = True
     while running:

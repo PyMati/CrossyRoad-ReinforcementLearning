@@ -43,6 +43,8 @@ class Gameboard(pygame.sprite.Sprite):
         self.car_counter = 0
         self.car_spawn_counter = 0
 
+        self.static_cars_pos = []
+
         # Setting player env
         self.env = np.zeros((self.y_chunk_multiplier, self.x_chunk_multiplier))
 
@@ -78,6 +80,7 @@ class Gameboard(pygame.sprite.Sprite):
             for car_pos in STATIC_CARS_POS:
                 self.reward_map[car_pos[0]][car_pos[1]] = CAR_REWARD
                 self.env[car_pos[0]][car_pos[1]] = LEFT_CAR_NUM
+                self.static_cars_pos.append([car_pos[0], car_pos[1]])
 
     def get_env_state(self):
         return self.env
@@ -193,8 +196,7 @@ class Gameboard(pygame.sprite.Sprite):
         for player in self.players:
             if player.get_player_pos() == [self.y_chunk_multiplier - 1, self.end_x_pos]:
                 player.has_won = True
-                player.player_won_place = player.get_player_pos()
-                player.cars_set_player_won = self.get_active_cars_pos()
+                player.win_player_state = deepcopy(self)
                 return player.get_player_type()
             if player.is_dead:
                 dead_players += 1
@@ -210,14 +212,14 @@ class Gameboard(pygame.sprite.Sprite):
         for player in self.players:
             for car in self.active_cars:
                 if player.get_player_pos() == car.get_pos() and player.has_won != True:
-                    player.player_kill_place = player.get_player_pos()
-                    player.cars_set_player_kill = self.get_active_cars_pos()
+                    player.lose_player_state = deepcopy(self)
                     player.kill_player()
 
     def check_static_end(self):
         for player in self.players:
             for car_pos in STATIC_CARS_POS:
                 if player.get_player_pos() == car_pos and player.has_won != True:
+                    player.lose_player_state = deepcopy(self)
                     player.kill_player()
 
     def get_reward(self, player_pos):
