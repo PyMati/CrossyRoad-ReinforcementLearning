@@ -64,3 +64,4 @@ CAR_REWARD = -10
 
 # Static map settings y 0 - 7 / x 0 - 5
 STATIC_CARS_POS = [[1, 3], [1, 4], [3, 2], [3, 1], [5, 3], [5, 2]]
+# STATIC_CARS_POS = [[1, 3], [3, 1], [5, 2]]

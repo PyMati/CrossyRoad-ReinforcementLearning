@@ -20,9 +20,9 @@ class ApproximationAgent:
 
         self.alpha = 0.1
         self.gamma = 0.9
-        self.epsilon = 0.6
+        self.epsilon = 0.3
 
-        self.features_num = 4
+        self.features_num = 7
         self.__load_weights()
 
         if not self.are_weights_loaded:
@@ -97,24 +97,10 @@ class ApproximationAgent:
     def prepare_features(self, player_pos, action):
         features = []
 
-        nearest_car = None
-        min_distance = float("inf")
-        for car in self.car_positions:
-            distance = (
-                (player_pos[0] - car[0]) ** 2 + (player_pos[1] - car[1]) ** 2
-            ) ** 0.5
-
-            if distance < min_distance:
-                min_distance = distance
-                nearest_car = car
-
-        features += [player_pos[0] - nearest_car[0], player_pos[1] - nearest_car[1]]
-
-        distance_to_end = np.sqrt(
-            (player_pos[0] - self.gameboard.end_x_pos) ** 2
-            + (player_pos[1] - self.gameboard.y_chunk_multiplier - 1) ** 2
-        )
-        features.append(distance_to_end)
+        features += [
+            player_pos[0] - self.gameboard.end_x_pos,
+            player_pos[1] - self.gameboard.y_chunk_multiplier - 1,
+        ]
 
         add_zero = True
         move = np.array(self.actions_next_pos[action])
@@ -124,12 +110,22 @@ class ApproximationAgent:
             if next_pos == car:
                 features.append(1)
                 add_zero = False
-
         if add_zero:
             features.append(0)
 
+        features += [
+            next_pos[0] - self.gameboard.end_x_pos,
+            next_pos[1] - self.gameboard.y_chunk_multiplier - 1,
+        ]
+
+        features.append(1) if next_pos[
+            0
+        ] == self.gameboard.y_chunk_multiplier - 1 else features.append(0)
+        features.append(1) if next_pos[
+            1
+        ] == self.gameboard.end_x_pos else features.append(0)
+
         features = np.array(features)
-        features /= 10
 
         return features
 
@@ -155,7 +151,7 @@ class ApproximationAgent:
 
         delta = reward + self.gamma * next_state_approxim - state_approxim
 
-        print(delta, terminal)
+        # print(delta, terminal)
 
         self.weights += self.alpha * delta * multiplier
 
@@ -176,20 +172,16 @@ class ApproximationAgent:
         best_actions = [
             action for action, value in action_val_dict.items() if value == best_value
         ]
-        print(current_player_pos, action_val_dict)
-
         best_action = random.choice(best_actions)
-
         return best_action
 
     def get_action(self, state):
         r = np.random.random()
-        if r > self.epsilon:
-            print("RANDOM")
+        if r < self.epsilon:
             return random.choice(
                 self.possible_actions[str(self.player.get_player_pos())]
             )
-        print("BEST")
+
         return self.get_best_action(state)
 
     def final_action(self, action):
@@ -209,6 +201,7 @@ class ApproximationAgent:
             self.counter = 0
             if self.is_training:
                 reward = 0
+
                 if self.prv_action is None and self.prv_state is None:
                     action = random.choice(
                         self.possible_actions[str(self.player.get_player_pos())]
@@ -221,8 +214,6 @@ class ApproximationAgent:
                     return
 
                 if self.player.has_won:
-                    # print(self.car_positions)
-                    # print(self.player.win_player_state)
                     reward += 10
                     self.update(
                         reward,
@@ -234,8 +225,6 @@ class ApproximationAgent:
                     self.player.reset_pos()
                 elif self.player.is_dead:
                     reward -= 10
-                    # print("DLA RUCHU", self.prv_action)
-                    # print("DLA POZYCJI", self.prv_state.players[0].get_player_pos())
                     self.update(
                         reward,
                         self.prv_state,
@@ -243,27 +232,19 @@ class ApproximationAgent:
                         self.prv_action,
                         0,
                     )
-                    # print(
-                    #     self.car_positions,
-                    #     self.prv_action,
-                    #     self.prv_state.players[0].get_player_pos(),
-                    # )
-                    # print(self.player.lose_player_state.players[0].get_player_pos())
                     self.player.reset_pos()
                 else:
-                    reward += (
-                        np.sqrt(
-                            (self.player.get_player_pos()[0] - self.gameboard.end_x_pos)
-                            ** 2
-                            + (
-                                self.player.get_player_pos()[1]
-                                - self.gameboard.y_chunk_multiplier
-                                - 1
-                            )
-                            ** 2
-                        )
-                        / 100
-                    )
+                    if (
+                        self.player.get_player_pos()[0]
+                        < self.prv_state.players[0].get_player_pos()[0]
+                        or self.player.get_player_pos()[1]
+                        < self.prv_state.players[0].get_player_pos()[1]
+                    ):
+                        print("PO DUPIE")
+                        reward -= 10  # Penalty for moving backward
+                    else:
+                        reward += 1
+
                     self.update(reward, self.prv_state, self.gameboard, self.prv_action)
 
                 action = self.get_action(self.gameboard)
