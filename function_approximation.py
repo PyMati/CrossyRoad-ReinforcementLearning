@@ -20,7 +20,7 @@ class ApproximationAgent:
 
         self.alpha = 0.1
         self.gamma = 0.9
-        self.epsilon = 0.3
+        self.epsilon = 0.6
 
         self.features_num = 4
         self.__load_weights()
@@ -73,6 +73,7 @@ class ApproximationAgent:
             self.possible_actions[str(state)] = self.gameboard.get_possible_actions(
                 state[0], state[1]
             )
+            self.possible_actions[str(state)].remove("s")
 
     def __load_weights(self):
         try:
@@ -143,7 +144,7 @@ class ApproximationAgent:
                 next_state.players[0].get_player_pos(), action
             )
         else:
-            next_state_approxim = -1
+            next_state_approxim = 0
 
             multiplier = 1
 
@@ -220,12 +221,21 @@ class ApproximationAgent:
                     return
 
                 if self.player.has_won:
-                    print(self.car_positions)
-                    print(self.player.win_player_state)
+                    # print(self.car_positions)
+                    # print(self.player.win_player_state)
+                    reward += 10
+                    self.update(
+                        reward,
+                        self.prv_state,
+                        self.gameboard,
+                        self.prv_action,
+                        0,
+                    )
+                    self.player.reset_pos()
                 elif self.player.is_dead:
                     reward -= 10
-                    print("DLA RUCHU", self.prv_action)
-                    print("DLA POZYCJI", self.prv_state.players[0].get_player_pos())
+                    # print("DLA RUCHU", self.prv_action)
+                    # print("DLA POZYCJI", self.prv_state.players[0].get_player_pos())
                     self.update(
                         reward,
                         self.prv_state,
@@ -241,6 +251,19 @@ class ApproximationAgent:
                     # print(self.player.lose_player_state.players[0].get_player_pos())
                     self.player.reset_pos()
                 else:
+                    reward += (
+                        np.sqrt(
+                            (self.player.get_player_pos()[0] - self.gameboard.end_x_pos)
+                            ** 2
+                            + (
+                                self.player.get_player_pos()[1]
+                                - self.gameboard.y_chunk_multiplier
+                                - 1
+                            )
+                            ** 2
+                        )
+                        / 100
+                    )
                     self.update(reward, self.prv_state, self.gameboard, self.prv_action)
 
                 action = self.get_action(self.gameboard)
@@ -252,5 +275,6 @@ class ApproximationAgent:
                 action = self.get_best_action(self.gameboard)
 
             self.final_action(action)
+
         else:
             self.counter += 1
