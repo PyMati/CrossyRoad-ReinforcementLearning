@@ -240,7 +240,6 @@ class ApproximationAgent:
                         or self.player.get_player_pos()[1]
                         < self.prv_state.players[0].get_player_pos()[1]
                     ):
-                        print("PO DUPIE")
                         reward -= 10  # Penalty for moving backward
                     else:
                         reward += 1
